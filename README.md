@@ -1,1 +1,0 @@
-# nft-on-chain-validator
