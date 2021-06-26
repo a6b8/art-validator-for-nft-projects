@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js" integrity="sha512-nOQuvD9nKirvxDdvQ9OMqe2dgapbPB7vYAMrzJihw5m+aNcf0dX53m6YxM4LgA9u8e9eg9QX+/+mPu8kCNpV2A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+<link rel="preconnect" href="https://fonts.googleapis.com"> 
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.2/min/dropzone.min.js" integrity="sha512-VQQXLthlZQO00P+uEu4mJ4G4OAgqTtKG1hri56kQY1DtdLeIqhKUp9W/lllDDu3uN3SnUNawpW7lBda8+dSi7w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+body,h1 {font-family: "DM Sans", sans-serif}
+body, html {height: 100%}
+.bgimg {
+  background-image: url('nft-background.png');
+  min-height: 100%;
+  background-position: center;
+  background-size: cover;
+}
+
+.morphism {
+    background: rgba( 255, 255, 255, 0.25 );
+    box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+    backdrop-filter: blur( 4px );
+    -webkit-backdrop-filter: blur( 20px );
+    border-radius: 10px;
+    border: 1px solid rgba( 255, 255, 255, 0.28 );
+    width: 85%;
+    height: 100%;
+    padding: 10%;
+    border-color: white;
+    box-shadow: inset 0 0 12px #fff;
+    overflow: scroll;
+}
+
+.c {
+    text-align: center;
+    vertical-align: middle;
+    font-family: "DMSans Bold";
+    text-shadow: 2px 2px #9181ad;
+}
+
+.dropzone {
+    border:4px dashed white;
+    width:100%;
+    max-height: 150px
+}
+
+
+</style>
+<body>
+
+<div class="bgimg w3-display-container w3-animate-opacity w3-text-white">
+  <div class="w3-display-topleft w3-padding-large w3-xlarge">
+    <img src="logo-svg-color-grey.svg" height="40px">
+  </div>
+  <div style="width: 300px">
+    <div class="w3-display-middle morphism" id="morphism" >
+        <div class="c">
+          <h1 class="w3-jumbo w3-animate-top">NFT Validator</h1>
+          <hr class="w3-border-grey" style="margin:auto;width:40%">
+          <canvas id="dropzone" class="dropzone"></canvas>
+          <button id="go">Analyse</button>
+        </div>
+    </div>
+  </div>
+
+  <div class="w3-display-bottomleft w3-padding-large">
+    A <a href="https://hack.ethglobal.co/hackmoney2021" target="_blank">Hack Money</a> Hackathon Project.
+  </div>
+</div>
+
+<script>
+    function resizeHeight() {
+        p = 60
+
+        content = document
+            .getElementById( 'morphism' )
+            .getBoundingClientRect()
+            .height
+        
+        total = window.innerHeight
+        updated = total - p * 2
+
+        document.getElementById('morphism').setAttribute("style","height:" + updated + 'px');
+
+    }
+
+    window.addEventListener('DOMContentLoaded', resizeHeight );
+    window.addEventListener('resize', resizeHeight);
+
+
+    let exportsSelf = {};
+
+    exportsSelf.CLIPBOARD_CLASS = function (canvas_id, autoresize, callback) {
+        let _self = this;
+        let canvas = document.getElementById(canvas_id);
+        console.log('CLIPBOARD_CLASS canvas', canvas);
+        let ctx = document.getElementById(canvas_id).getContext("2d");
+        console.log('CLIPBOARD_CLASS ctx', ctx);
+
+        //handlers
+        document.addEventListener('paste', function (e) {
+            console.log('paste');
+            _self.paste_auto(e);
+        }, false);
+
+        /* events fired on the drop targets */
+        document.addEventListener("dragover", function (e) {
+            // prevent default to allow drop
+            e.preventDefault();
+        }, false);
+        document.addEventListener('drop', function (e) {
+            // prevent default action (open as link for some elements)
+            // add event handler to canvas if desired instead of document
+            //debugger;
+            e.preventDefault();
+            let items = e.dataTransfer.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf("image") !== -1) {
+                    //document.getElementById("instructions").style.visibility = "hidden";
+                    //image
+                    let blob = items[i].getAsFile();
+                    let URLObj = window.URL || window.webkitURL;
+                    let source = URLObj.createObjectURL(blob);
+                    _self.paste_createImage(source);
+                }
+            }
+        });
+
+        //on paste
+        this.paste_auto = function (e) {
+            if (e.clipboardData) {
+                let items = e.clipboardData.items;
+                if (!items)
+                    return;
+
+                //access data directly
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf("image") !== -1) {
+                        //image
+                        let blob = items[i].getAsFile();
+                        let URLObj = window.URL || window.webkitURL;
+                        let source = URLObj.createObjectURL(blob);
+                        this.paste_createImage(source);
+                    }
+                }
+                e.preventDefault();
+
+            }
+        };
+        //draw pasted image to canvas
+        this.paste_createImage = function (source) {
+            console.log('this.paste_createImage', source);
+            //debugger;
+            let pastedImage = new Image();
+            pastedImage.onload = function () {
+                if (autoresize == true) {
+                    //resize
+                    canvas.width = pastedImage.width;
+                    canvas.height = pastedImage.height;
+                } else {
+                    //clear canvas
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+                ctx.drawImage(pastedImage, 0, 0);
+                const imageAsString = getImgAsString(canvas_id);
+                callback(imageAsString);
+            };
+            pastedImage.src = source;
+        };
+    };
+
+function isCanvasBlank(canvas) { // detect blank canvas: https://stackoverflow.com/a/17386803/
+  console.log('isCanvasBlank', canvas);
+  let blank = document.createElement('canvas');
+  blank.width = canvas.width;
+  blank.height = canvas.height;
+  return canvas.toDataURL() === blank.toDataURL();
+}
+
+function getImgAsString(canvasElementId) {
+        console.log('getImgAsString', canvasElementId);
+        //debugger;                
+        let canvasEl = document.getElementById(canvasElementId);
+        if (isCanvasBlank(canvasEl)) {
+            return null;
+        } else {
+            let imageData = canvasEl.toDataURL("image/png");
+            imageData = imageData.replace('data:image/png;base64,', '');
+            return imageData;
+        }
+    }
+
+
+const canvasElementId = 'dropzone';
+let CLIPBOARD = new exportsSelf.CLIPBOARD_CLASS(canvasElementId, true, function() {
+  console.log('paste_auto finished');
+  document.getElementById('go').style.display = 'block';
+});
+
+document.getElementById('go').addEventListener('click', function() {
+  const imgString = getImgAsString(canvasElementId);
+  var hash = CryptoJS.MD5("Message");
+  var md5 = hash.toString()
+  alert("MD5: " + md5);
+});
+
+
+</script>
+
+</body>
+</html>
+
